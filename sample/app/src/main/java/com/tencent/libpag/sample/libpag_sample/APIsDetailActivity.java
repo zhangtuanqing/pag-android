@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
@@ -25,6 +26,7 @@ import android.widget.RelativeLayout;
 
 import org.libpag.PAGComposition;
 import org.libpag.PAGFile;
+import org.libpag.PAGFont;
 import org.libpag.PAGImage;
 import org.libpag.PAGPlayer;
 import org.libpag.PAGSurface;
@@ -76,9 +78,11 @@ public class APIsDetailActivity extends AppCompatActivity {
     private void initPAGView() {
         RelativeLayout backgroundView = findViewById(R.id.background_view);
         final PAGView pagView = new PAGView(this);
+        pagView.setBackgroundColor(Color.BLACK);
         pagView.setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         backgroundView.addView(pagView);
         Intent intent = getIntent();
+        PAGFont pagFont = PAGFont.RegisterFont(this.getAssets(), "source_han_sans_sc_bold.otf");
         if (intent == null) {
             return;
         }
@@ -93,8 +97,8 @@ public class APIsDetailActivity extends AppCompatActivity {
                 break;
             // Replace text in pag file
             case 1:
-                pagFile1 = PAGFile.Load(getAssets(), "test2.pag");
-                testEditText(pagFile1, pagView);
+                pagFile1 = PAGFile.Load(getAssets(), "test_font.pag");
+                testEditText(pagFile1, pagView, pagFont);
                 pagView.setComposition(pagFile1);
                 break;
             // Replace image in pag file
@@ -163,11 +167,23 @@ public class APIsDetailActivity extends AppCompatActivity {
     /**
      * Test edit text.
      */
-    void testEditText(PAGFile pagFile, PAGView pagView) {
+    void testEditText(PAGFile pagFile, PAGView pagView, PAGFont pagFont) {
         if (pagFile == null || pagView == null || pagFile.numTexts() <= 0) return;
-        PAGText textData = pagFile.getTextData(0);
-        textData.text = "replacement test";
-        pagFile.replaceText(0, textData);
+        for (int i = 0; i < pagFile.numTexts(); i++) {
+            PAGText textData = pagFile.getTextData(i);
+            if (i == 0) {
+                if (pagFont != null) {
+                    textData.fontFamily = pagFont.fontFamily;
+                    textData.fontStyle = pagFont.fontStyle;
+                }
+                textData.backgroundColor = Color.YELLOW;
+                textData.backgroundAlpha = 255;
+                textData.fillColor = 0xFFFF0000;
+                textData.applyFill = true;
+                textData.text = "Shout it from the top of roof";
+            }
+            pagFile.replaceText(i, textData);
+        }
     }
 
     private static void verifyStoragePermissions(Activity activity) {
